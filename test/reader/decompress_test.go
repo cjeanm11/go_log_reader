@@ -59,7 +59,7 @@ func compress2Gzip(input []byte) ([]byte, error) {
 
 func TestDecompress(t *testing.T) {
 	inputData := []byte("SampleInput") // Replace this with your actual input data
-	selectedStream := reader.DecompressStream(&inputData)
+	selectedStream, err := reader.DecompressStream(&inputData)
 	size, err := io.Copy(os.Stdout, selectedStream)
 	fmt.Printf("size : %d\n", size)
 	if err != nil {
@@ -67,7 +67,7 @@ func TestDecompress(t *testing.T) {
 	}
 
 	inputData = []byte("") // Replace this with your actual input data
-	selectedStream = reader.DecompressStream(&inputData)
+	selectedStream, err = reader.DecompressStream(&inputData)
 	size, err = io.Copy(os.Stdout, selectedStream)
 	fmt.Printf("size : %d\n", size)
 	if err != nil {
@@ -94,9 +94,8 @@ func TestDecompress_Bzip2(t *testing.T) {
 
 	fmt.Printf("Compressed data length: %d bytes\n", len(compressedData))
 
-	decompressedStream := reader.DecompressStream(&compressedData)
+	decompressedStream, err := reader.DecompressStream(&compressedData)
 
-	// Copy decompressed data to standard output (console)
 	size, err := io.Copy(os.Stdout, decompressedStream)
 	fmt.Printf("size : %d \n", size)
 	if err != nil {
@@ -122,9 +121,8 @@ func TestDecompress_GZ(t *testing.T) {
 
 	fmt.Printf("Compressed data length: %d bytes\n", len(compressedData))
 
-	decompressedStream := reader.DecompressStream(&compressedData)
+	decompressedStream, err := reader.DecompressStream(&compressedData)
 
-	// Copy decompressed data to standard output (console)
 	size, err := io.Copy(os.Stdout, decompressedStream)
 	fmt.Printf("size : %d \n", size)
 	if err != nil {

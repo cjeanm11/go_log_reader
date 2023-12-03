@@ -6,31 +6,25 @@ import (
 	"compress/gzip"
 	"fmt"
 	"io"
-	"log"
 )
 
-// string fileTypes
 const (
-	bx2     string = "bx2"
-	gz             = "gz"
-	unknown        = "unknown"
+	bx2     = "bx2"
+	gz      = "gz"
+	unknown = "unknown"
 )
 
 var decompressionMap = map[string]DecompressionFunc{
 	bx2: decompressBZ2,
 	gz:  decompressGZ,
-	// Add other decompression functions as needed
 }
 
-type DecompressionFunc func(data *[]byte) []byte
+type DecompressionFunc func(data *[]byte) ([]byte, error)
 
-// Checks for byte order mark
 func getFileType(chunk *[]byte) string {
-	// Implement additional checks for other file types if needed
-	// If no known magic bytes match, return "unknown"
-	if bytes.HasPrefix(*chunk, []byte{0x42, 0x5A}) { // Check for the BZ2 magic bytes
+	if bytes.HasPrefix(*chunk, []byte{0x42, 0x5A}) {
 		return bx2
-	} else if bytes.HasPrefix(*chunk, []byte{0x1F, 0x8B}) { // Check for the GZ magic bytes
+	} else if bytes.HasPrefix(*chunk, []byte{0x1F, 0x8B}) {
 		return gz
 	} else {
 		if len(*chunk) > 2 {
@@ -40,46 +34,46 @@ func getFileType(chunk *[]byte) string {
 	}
 }
 
-func DecompressStream(inputData *[]byte) io.Reader {
-	var selectedStream io.Reader
-
+func DecompressStream(inputData *[]byte) (io.Reader, error) {
 	fileType := getFileType(inputData)
 	decompressionFunc, exists := decompressionMap[fileType]
 
-	if exists {
-		selectedStream = bytes.NewReader(decompressionFunc(inputData))
-	} else {
-		fmt.Println("Unknown file format :", fileType)
-		selectedStream = bytes.NewReader(*inputData)
+	if !exists {
+		return bytes.NewReader(*inputData), nil
 	}
 
-	return selectedStream
+	decompressedData, err := decompressionFunc(inputData)
+	if err != nil {
+		return nil, err
+	}
+
+	return bytes.NewReader(decompressedData), nil
 }
 
-func decompressBZ2(data *[]byte) []byte {
+func decompressBZ2(data *[]byte) ([]byte, error) {
 	buf := bytes.NewBuffer(*data)
 	decompressed := bytes.NewBuffer(nil)
 
 	reader := bzip2.NewReader(buf)
 	if _, err := io.Copy(decompressed, reader); err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
-	return decompressed.Bytes()
+	return decompressed.Bytes(), nil
 }
 
-func decompressGZ(data *[]byte) []byte {
+func decompressGZ(data *[]byte) ([]byte, error) {
 	buf := bytes.NewBuffer(*data)
 	decompressed := bytes.NewBuffer(nil)
 
 	reader, err := gzip.NewReader(buf)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
 	if _, err := io.Copy(decompressed, reader); err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
-	return decompressed.Bytes()
+	return decompressed.Bytes(), nil
 }

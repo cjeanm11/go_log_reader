@@ -109,8 +109,8 @@ func TestDecompress_Bzip2(t *testing.T) {
 func TestDecompress_GZ(t *testing.T) {
 
 	var sampleInput []byte = nil
-	textBzip2 := "This is a sample input string."
-	sampleInput = append(sampleInput, []byte(textBzip2)...)
+	textGZ := "This is a sample input string."
+	sampleInput = append(sampleInput, []byte(textGZ)...)
 
 	// Compress the data using Bzip2
 	compressedData, err := compress2Gzip(sampleInput)

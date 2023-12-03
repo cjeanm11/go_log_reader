@@ -1,10 +1,10 @@
-package processor
+package reader
 
 import (
 	"bytes"
 	"compress/gzip"
 	"fmt"
-	"go_log_reader/src/processor"
+	"go_log_reader/src/reader"
 	"io"
 	"log"
 	"os"
@@ -60,7 +60,7 @@ func compress2Gzip(input []byte) ([]byte, error) {
 func TestDecompress(t *testing.T) {
 	inputData := []byte("SampleInput") // Replace this with your actual input data
 	options := make(map[string]interface{})
-	selectedStream := processor.DecompressStream(inputData, options)
+	selectedStream := reader.DecompressStream(inputData, options)
 	size, err := io.Copy(os.Stdout, selectedStream)
 	fmt.Printf("size : %d\n", size)
 	if err != nil {
@@ -69,7 +69,7 @@ func TestDecompress(t *testing.T) {
 
 	inputData = []byte("") // Replace this with your actual input data
 	options = make(map[string]interface{})
-	selectedStream = processor.DecompressStream(inputData, options)
+	selectedStream = reader.DecompressStream(inputData, options)
 	size, err = io.Copy(os.Stdout, selectedStream)
 	fmt.Printf("size : %d\n", size)
 	if err != nil {
@@ -96,7 +96,7 @@ func TestDecompress_Bzip2(t *testing.T) {
 
 	fmt.Printf("Compressed data length: %d bytes\n", len(compressedData))
 
-	decompressedStream := processor.DecompressStream(compressedData, nil)
+	decompressedStream := reader.DecompressStream(compressedData, nil)
 
 	// Copy decompressed data to standard output (console)
 	size, err := io.Copy(os.Stdout, decompressedStream)
@@ -124,7 +124,7 @@ func TestDecompress_GZ(t *testing.T) {
 
 	fmt.Printf("Compressed data length: %d bytes\n", len(compressedData))
 
-	decompressedStream := processor.DecompressStream(compressedData, nil)
+	decompressedStream := reader.DecompressStream(compressedData, nil)
 
 	// Copy decompressed data to standard output (console)
 	size, err := io.Copy(os.Stdout, decompressedStream)

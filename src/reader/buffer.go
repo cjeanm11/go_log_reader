@@ -1,4 +1,4 @@
-package processor
+package reader
 
 import (
 	"encoding/binary"

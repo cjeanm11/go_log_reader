@@ -1,8 +1,8 @@
-package processor
+package reader
 
 import (
 	"fmt"
-	"go_log_reader/src/processor"
+	"go_log_reader/src/reader"
 	"testing"
 )
 
@@ -18,13 +18,13 @@ func TestBuffer(t *testing.T) {
 
 	var want uint32 = 16
 
-	size := processor.ReadSize(buffer, offset)
+	size := reader.ReadSize(buffer, offset)
 	fmt.Printf("Message size: %d\n", size) // 16 int32
 	if !(want == size) {
 		t.Fatalf(`ReadSize(buffer, offset) = %q, want match for %#q`, size, want)
 	}
 
-	message := processor.ReadMessage(buffer, offset)
+	message := reader.ReadMessage(buffer, offset)
 	if message != nil {
 		fmt.Printf("Message content: % x\n", message)
 	} else {
@@ -32,7 +32,7 @@ func TestBuffer(t *testing.T) {
 	}
 
 	offset += int(size)
-	message = processor.ReadMessage(buffer, offset)
+	message = reader.ReadMessage(buffer, offset)
 	if message != nil {
 		fmt.Printf("Message content: % x\n", message)
 	} else {

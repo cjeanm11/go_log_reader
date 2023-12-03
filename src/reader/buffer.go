@@ -4,13 +4,13 @@ import (
 	"encoding/binary"
 )
 
-func ReadSize(buf []byte, offset int) uint32 {
-	if len(buf) < offset+8 {
+func ReadSize(buf *[]byte, offset int) uint32 {
+	if len(*buf) < offset+8 {
 		return 0
 	}
 
-	segments := binary.LittleEndian.Uint32(buf[offset:])
-	if len(buf) < offset+4+int(segments*4) {
+	segments := binary.LittleEndian.Uint32((*buf)[offset:])
+	if len(*buf) < offset+4+int(segments*4) {
 		return 0
 	}
 
@@ -18,11 +18,11 @@ func ReadSize(buf []byte, offset int) uint32 {
 	var totalSize uint32
 
 	for i := uint32(0); i < segments; i++ {
-		if len(buf) < offset+localIndex+4 {
+		if len(*buf) < offset+localIndex+4 {
 			return 0
 		}
 
-		segSize := binary.LittleEndian.Uint32(buf[offset+localIndex:])
+		segSize := binary.LittleEndian.Uint32((*buf)[offset+localIndex:])
 		totalSize += (segSize * 8)
 		localIndex += 4
 	}
@@ -33,10 +33,10 @@ func ReadSize(buf []byte, offset int) uint32 {
 	return totalSize
 }
 
-func ReadMessage(buf []byte, offset int) []byte {
+func ReadMessage(buf *[]byte, offset int) []byte {
 	size := ReadSize(buf, offset)
-	if size == 0 || len(buf) < offset+int(size) {
+	if size == 0 || len(*buf) < offset+int(size) {
 		return nil
 	}
-	return buf[offset : offset+int(size)]
+	return (*buf)[offset : offset+int(size)]
 }

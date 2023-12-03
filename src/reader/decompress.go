@@ -22,25 +22,25 @@ var decompressionMap = map[string]DecompressionFunc{
 	// Add other decompression functions as needed
 }
 
-type DecompressionFunc func(data []byte) []byte
+type DecompressionFunc func(data *[]byte) []byte
 
 // Checks for byte order mark
-func getFileType(chunk []byte) string {
+func getFileType(chunk *[]byte) string {
 	// Implement additional checks for other file types if needed
 	// If no known magic bytes match, return "unknown"
-	if bytes.HasPrefix(chunk, []byte{0x42, 0x5A}) { // Check for the BZ2 magic bytes
+	if bytes.HasPrefix(*chunk, []byte{0x42, 0x5A}) { // Check for the BZ2 magic bytes
 		return bx2
-	} else if bytes.HasPrefix(chunk, []byte{0x1F, 0x8B}) { // Check for the GZ magic bytes
+	} else if bytes.HasPrefix(*chunk, []byte{0x1F, 0x8B}) { // Check for the GZ magic bytes
 		return gz
 	} else {
-		if len(chunk) > 2 {
-			return fmt.Sprintf("% x", chunk[:2])
+		if len(*chunk) > 2 {
+			return fmt.Sprintf("% x", (*chunk)[:2])
 		}
 		return unknown
 	}
 }
 
-func DecompressStream(inputData []byte, options map[string]interface{}) io.Reader {
+func DecompressStream(inputData *[]byte) io.Reader {
 	var selectedStream io.Reader
 
 	fileType := getFileType(inputData)
@@ -50,14 +50,14 @@ func DecompressStream(inputData []byte, options map[string]interface{}) io.Reade
 		selectedStream = bytes.NewReader(decompressionFunc(inputData))
 	} else {
 		fmt.Println("Unknown file format :", fileType)
-		selectedStream = bytes.NewReader(inputData)
+		selectedStream = bytes.NewReader(*inputData)
 	}
 
 	return selectedStream
 }
 
-func decompressBZ2(data []byte) []byte {
-	buf := bytes.NewBuffer(data)
+func decompressBZ2(data *[]byte) []byte {
+	buf := bytes.NewBuffer(*data)
 	decompressed := bytes.NewBuffer(nil)
 
 	reader := bzip2.NewReader(buf)
@@ -68,8 +68,8 @@ func decompressBZ2(data []byte) []byte {
 	return decompressed.Bytes()
 }
 
-func decompressGZ(data []byte) []byte {
-	buf := bytes.NewBuffer(data)
+func decompressGZ(data *[]byte) []byte {
+	buf := bytes.NewBuffer(*data)
 	decompressed := bytes.NewBuffer(nil)
 
 	reader, err := gzip.NewReader(buf)

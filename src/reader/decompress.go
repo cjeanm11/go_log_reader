@@ -8,9 +8,12 @@ import (
 	"io"
 )
 
+// TODO general : add more specific error messsage (errors.go)
+
 const (
-	bx2     = "bx2"
-	gz      = "gz"
+	bx2 = "bx2"
+	gz  = "gz"
+	// TODO add 7z format
 	unknown = "unknown"
 )
 
@@ -19,7 +22,7 @@ var decompressionMap = map[string]DecompressionFunc{
 	gz:  decompressGZ,
 }
 
-type DecompressionFunc func(data *[]byte) ([]byte, error)
+type DecompressionFunc func(data *[]byte) (io.Reader, error)
 
 func getFileType(chunk *[]byte) string {
 	if bytes.HasPrefix(*chunk, []byte{0x42, 0x5A}) {
@@ -34,12 +37,13 @@ func getFileType(chunk *[]byte) string {
 	}
 }
 
-func DecompressStream(inputData *[]byte) (io.Reader, error) {
+func DecompressStream(inputData *[]byte) (func(func([]byte)), error) {
 	fileType := getFileType(inputData)
 	decompressionFunc, exists := decompressionMap[fileType]
 
 	if !exists {
-		return bytes.NewReader(*inputData), nil
+		buf := bytes.NewBuffer(*inputData)
+		return StreamReader(buf, NewGenericStream()), nil
 	}
 
 	decompressedData, err := decompressionFunc(inputData)
@@ -47,10 +51,10 @@ func DecompressStream(inputData *[]byte) (io.Reader, error) {
 		return nil, err
 	}
 
-	return bytes.NewReader(decompressedData), nil
+	return StreamReader(decompressedData, NewGenericStream()), nil
 }
 
-func decompressBZ2(data *[]byte) ([]byte, error) {
+func decompressBZ2(data *[]byte) (io.Reader, error) {
 	buf := bytes.NewBuffer(*data)
 	decompressed := bytes.NewBuffer(nil)
 
@@ -59,10 +63,10 @@ func decompressBZ2(data *[]byte) ([]byte, error) {
 		return nil, err
 	}
 
-	return decompressed.Bytes(), nil
+	return decompressed, nil
 }
 
-func decompressGZ(data *[]byte) ([]byte, error) {
+func decompressGZ(data *[]byte) (io.Reader, error) {
 	buf := bytes.NewBuffer(*data)
 	decompressed := bytes.NewBuffer(nil)
 
@@ -75,5 +79,5 @@ func decompressGZ(data *[]byte) ([]byte, error) {
 		return nil, err
 	}
 
-	return decompressed.Bytes(), nil
+	return decompressed, nil
 }

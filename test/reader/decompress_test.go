@@ -5,9 +5,7 @@ import (
 	"compress/gzip"
 	"fmt"
 	"go_log_reader/src/reader"
-	"io"
 	"log"
-	"os"
 	"testing"
 
 	"github.com/dsnet/compress/bzip2"
@@ -16,13 +14,11 @@ import (
 func compress2Bzip2(input []byte) ([]byte, error) {
 	var compressed bytes.Buffer
 
-	// Create a Bzip2 writer with default compression settings
 	writer, err := bzip2.NewWriter(&compressed, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	// Write the input data to the writer
 	_, err = writer.Write(input)
 	if err != nil {
 		writer.Close()
@@ -40,10 +36,8 @@ func compress2Bzip2(input []byte) ([]byte, error) {
 func compress2Gzip(input []byte) ([]byte, error) {
 	var compressed bytes.Buffer
 
-	// Create a Gzip writer with default compression settings
 	writer := gzip.NewWriter(&compressed)
 
-	// Write the input data to the writer
 	_, err := writer.Write(input)
 	if err != nil {
 		return nil, err
@@ -57,22 +51,31 @@ func compress2Gzip(input []byte) ([]byte, error) {
 	return compressed.Bytes(), nil
 }
 
-func TestDecompress(t *testing.T) {
-	inputData := []byte("SampleInput") // Replace this with your actual input data
-	selectedStream, err := reader.DecompressStream(&inputData)
-	size, err := io.Copy(os.Stdout, selectedStream)
-	fmt.Printf("size : %d\n", size)
-	if err != nil {
-		t.Fatal(err)
-	}
+func readAndPrintStream(callback func(func([]byte))) {
+	callback(func(msg []byte) {
+		fmt.Println("Received message:", string(msg))
+		if msg == nil {
+			log.Fatal("no data received")
+		}
+	})
 
-	inputData = []byte("") // Replace this with your actual input data
-	selectedStream, err = reader.DecompressStream(&inputData)
-	size, err = io.Copy(os.Stdout, selectedStream)
-	fmt.Printf("size : %d\n", size)
-	if err != nil {
+}
+
+func TestDecompress(t *testing.T) {
+	inputData := []byte("SampleInput")
+	selectedStream, err := reader.DecompressStream(&inputData)
+	if err != nil && selectedStream != nil {
 		t.Fatal(err)
 	}
+	readAndPrintStream(selectedStream)
+
+	inputData = []byte("")
+	decompressedStream, err := reader.DecompressStream(&inputData)
+
+	if err != nil && decompressedStream != nil {
+		t.Fatal(err)
+	}
+	readAndPrintStream(decompressedStream)
 
 }
 
@@ -96,9 +99,7 @@ func TestDecompress_Bzip2(t *testing.T) {
 
 	decompressedStream, err := reader.DecompressStream(&compressedData)
 
-	size, err := io.Copy(os.Stdout, decompressedStream)
-	fmt.Printf("size : %d \n", size)
-	if err != nil {
+	if err != nil && decompressedStream != nil {
 		t.Fatal(err)
 	}
 }
@@ -109,7 +110,6 @@ func TestDecompress_GZ(t *testing.T) {
 	textGZ := "This is a sample input string."
 	sampleInput = append(sampleInput, []byte(textGZ)...)
 
-	// Compress the data using Bzip2
 	compressedData, err := compress2Gzip(sampleInput)
 	if err != nil {
 		log.Fatal("Error compressing data:", err)
@@ -123,9 +123,7 @@ func TestDecompress_GZ(t *testing.T) {
 
 	decompressedStream, err := reader.DecompressStream(&compressedData)
 
-	size, err := io.Copy(os.Stdout, decompressedStream)
-	fmt.Printf("size : %d \n", size)
-	if err != nil {
+	if err != nil && decompressedStream != nil {
 		t.Fatal(err)
 	}
 }
